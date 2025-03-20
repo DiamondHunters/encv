@@ -14,14 +14,15 @@ jobs:
       - name: Download latest versions
         id: download
         run: |
+          mkdir -p ./src/data
           if [ ! -f "./src/data/versions.json" ]; then
             touch ./src/data/versions.json
           fi
-          mv ./src/data/versions.json $TMPDIR/versions.json.old
+          cp ./src/data/versions.json /tmp/versions.json.old
           if curl -s -f "https://artifacts.electronjs.org/headers/index.json?force_headers_dist=1" -o src/data/versions.json; then
             echo "download_success=true" >> $GITHUB_OUTPUT
           else
-            cp $TMPDIR/versions.json.old ./src/data/versions.json
+            cp /tmp/versions.json.old ./src/data/versions.json
             echo "download_success=false" >> $GITHUB_OUTPUT
           fi
 
@@ -29,7 +30,7 @@ jobs:
         id: check_changes
         if: steps.download.outputs.download_success == 'true'
         run: |
-          if ! cmp -s "./src/data/versions.json" "$TMPDIR/versions.json.old"; then
+          if ! cmp -s "./src/data/versions.json" "/tmp/versions.json.old"; then
             echo "has_changes=true" >> $GITHUB_OUTPUT
           else
             echo "has_changes=false" >> $GITHUB_OUTPUT
