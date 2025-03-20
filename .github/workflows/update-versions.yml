@@ -1,0 +1,65 @@
+name: Update Electron Versions
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  update-versions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download latest versions
+        id: download
+        run: |
+          if [ ! -f "./src/data/versions.json" ]; then
+            touch ./src/data/versions.json
+          fi
+          mv ./src/data/versions.json $TMPDIR/versions.json.old
+          if curl -s -f "https://artifacts.electronjs.org/headers/index.json?force_headers_dist=1" -o src/data/versions.json; then
+            echo "download_success=true" >> $GITHUB_OUTPUT
+          else
+            cp $TMPDIR/versions.json.old ./src/data/versions.json
+            echo "download_success=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check for changes
+        id: check_changes
+        if: steps.download.outputs.download_success == 'true'
+        run: |
+          if ! cmp -s "./src/data/versions.json" "$TMPDIR/versions.json.old"; then
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          fi
+        
+      - name: Commit changes
+        if: steps.download.outputs.download_success == 'true' && steps.check_changes.outputs.has_changes == 'true'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add src/data/versions.json
+          git commit -m "$(python .github/script/generate_new_versions.py src/data/versions.json $TMPDIR/versions.json.old)"
+          git push
+
+      - name: Setup Node.js
+        if: github.event_name == 'workflow_dispatch' || (steps.download.outputs.download_success == 'true' && steps.check_changes.outputs.has_changes == 'true')
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install and Build
+        if: github.event_name == 'workflow_dispatch' || (steps.download.outputs.download_success == 'true' && steps.check_changes.outputs.has_changes == 'true')
+        run: |
+          npm ci
+          npm run build
+          mv ./src/data/versions.json ./dist/versions.json
+
+      - name: Deploy to GitHub Pages
+        if: github.event_name == 'workflow_dispatch' || (steps.download.outputs.download_success == 'true' && steps.check_changes.outputs.has_changes == 'true')
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist 
