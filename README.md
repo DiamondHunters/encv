@@ -3,6 +3,8 @@
 一个用于查询 Electron 版本对应的 Chrome、Node.js 和 V8 版本信息的 Web 应用。
 
 
+工具全部为静态页面，您可以自己构建，亦可以[在线使用](https://diamondhunters.github.io/encv/)
+
 项目是在LLM产品产物上进行微小打磨与组装后形成的，得益于大模型强大的能力，项目得以快速成型。
 这容许我们为许多微小的事情创建工具，感谢LLM。
 
