@@ -1,5 +1,11 @@
 name: Update Electron Versions
 
+# 添加权限配置
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
 on:
   schedule:
     - cron: '0 0 * * *'
