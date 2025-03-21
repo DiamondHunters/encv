@@ -19,4 +19,7 @@ old_file = sys.argv[1]
 new_file = sys.argv[2]
 
 new_versions = get_new_versions(old_file, new_file)
-print("add versions:", new_versions)
+if len(new_versions) > 0:
+    print("add versions:", new_versions)
+else:
+    raise Exception("no new versions")
