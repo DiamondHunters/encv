@@ -50,5 +50,5 @@ jobs:
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git add src/data/versions.json
-          git commit -m "$(python .github/script/generate_new_versions.py src/data/versions.json /tmp/versions.json.old)"
+          git commit -m "$(python .github/script/generate_new_versions.py /tmp/versions.json.old src/data/versions.json)"
           git push
